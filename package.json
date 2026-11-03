@@ -1,14 +1,17 @@
 {
-  "name": "skyPaws-universe",
+  "name": "skypaws-universe",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "engines": {
     "node": ">=22.18"
   },
+  "exports": {
+    ".": "./src/index.ts"
+  },
   "scripts": {
-    "typecheck": "pnpm -r typecheck",
-    "test": "pnpm -r test"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test \"test/**/*.test.ts\""
   },
   "devDependencies": {
     "@types/node": "^24.10.1",
