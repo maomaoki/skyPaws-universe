@@ -22,6 +22,10 @@ coverage/
 !.env.example
 !.env.*.example
 
+# 配置文件：真实配置只留在本机，模板文件入库
+config.yaml
+!config.example.yaml
+
 # 私钥与证书（read 工具同样把它们标为敏感文件）
 *.pem
 *.key

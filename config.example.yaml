@@ -1,0 +1,18 @@
+# ============================================================
+# skyPaws-universe 配置模板
+# 使用方法：复制本文件为 config.yaml，然后填入真实值
+# 注意：config.yaml 已被 .gitignore 忽略，真实密钥不会入库
+# ============================================================
+
+## 模型配置
+# 模型服务的接口地址（OpenAI 兼容格式，通常以 /v1 结尾）
+# 示例：https://api.layso.ai/v1 、https://api.openai.com/v1
+MODEL_URL: https://api.layso.ai/v1
+
+# 模型服务的 API 密钥（必填，从服务商控制台获取）
+# 示例：sk-xxxxxxxxxxxxxxxxxxxx
+MODEL_KEY: sk-your-api-key
+
+# 要调用的模型名称
+# 示例：gpt-4o 、claude-sonnet-4-5 、deepseek-chat
+MODEL_NAME: gpt-4o
