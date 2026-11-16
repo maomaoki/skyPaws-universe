@@ -8,6 +8,15 @@ build/
 out/
 *.tsbuildinfo
 
+# Go 编译产物
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
 # 测试覆盖率
 coverage/
 
