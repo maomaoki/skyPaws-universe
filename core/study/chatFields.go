@@ -1,11 +1,6 @@
 // Package study 记录 OpenAI 兼容接口返回字段的含义，便于查询。
 package study
 
-import (
-	"fmt"
-	"sort"
-)
-
 // ChatFields /chat/completions 返回字段说明。
 // key 用「路径」表示嵌套层级，数组用 [] 表示。
 var ChatFields = map[string]string{
@@ -44,15 +39,7 @@ func Describe(key string) (string, bool) {
 	return v, ok
 }
 
-// PrintAll 按字母序打印全部字段说明。
+// PrintAll 按字母序打印全部返回字段说明。
 func PrintAll() {
-	keys := make([]string, 0, len(ChatFields))
-	for k := range ChatFields {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-
-	for _, k := range keys {
-		fmt.Printf("%-45s %s\n", k, ChatFields[k])
-	}
+	printSortedFields(ChatFields)
 }
