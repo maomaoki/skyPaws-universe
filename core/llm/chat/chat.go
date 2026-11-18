@@ -1,13 +1,17 @@
-package llm
+// Package chat 提供 /chat/completions 的非流式与流式对话。
+package chat
 
 import (
 	"bufio"
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
+	"time"
 )
 
 // Message 一条对话消息
@@ -39,6 +43,11 @@ type streamChunk struct {
 	} `json:"choices"`
 }
 
+var defaultClient = &http.Client{Timeout: 30 * time.Second}
+var streamClient = &http.Client{Timeout: 10 * time.Minute}
+
+const maxErrBody = 4 << 10 // 4KB
+
 // Chat 发送一条消息，返回完整回复（非流式）
 func Chat(baseURL, apiKey, modelName, prompt string) (string, error) {
 	req, err := newChatRequest(baseURL, apiKey, modelName, prompt, false)
@@ -56,12 +65,12 @@ func Chat(baseURL, apiKey, modelName, prompt string) (string, error) {
 		return "", statusError(resp)
 	}
 
-	var cr chatResponse
 	raw, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return "", fmt.Errorf("读取响应失败: %w", err)
 	}
 
+	var cr chatResponse
 	if err := json.Unmarshal(raw, &cr); err != nil {
 		return "", fmt.Errorf("解析响应失败: %w", err)
 	}
@@ -120,12 +129,12 @@ func ChatStream(baseURL, apiKey, modelName, prompt string, onDelta func(string))
 	return sb.String(), nil
 }
 
-// newChatRequest 构造 /chat/completions 请求，流式与非流式共用
 func newChatRequest(baseURL, apiKey, modelName, prompt string, stream bool) (*http.Request, error) {
-	reqURL, err := endpointURL(baseURL, "/chat/completions")
+	u, err := url.Parse(strings.TrimSpace(baseURL))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("解析地址失败: %w", err)
 	}
+	u.Path = strings.TrimRight(u.Path, "/") + "/chat/completions"
 
 	payload, err := json.Marshal(chatRequest{
 		Model:    modelName,
@@ -136,11 +145,22 @@ func newChatRequest(baseURL, apiKey, modelName, prompt string, stream bool) (*ht
 		return nil, fmt.Errorf("序列化请求体失败: %w", err)
 	}
 
-	req, err := http.NewRequest(http.MethodPost, reqURL, bytes.NewReader(payload))
+	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewReader(payload))
 	if err != nil {
 		return nil, fmt.Errorf("创建请求失败: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	applyAuth(req, apiKey, AuthBearer)
+	if key := strings.TrimSpace(apiKey); key != "" {
+		req.Header.Set("Authorization", "Bearer "+key)
+	}
 	return req, nil
+}
+
+func statusError(resp *http.Response) error {
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, maxErrBody))
+	msg := fmt.Sprintf("API 返回错误: status=%d", resp.StatusCode)
+	if s := strings.TrimSpace(string(body)); s != "" {
+		msg += ", body=" + s
+	}
+	return errors.New(msg)
 }
